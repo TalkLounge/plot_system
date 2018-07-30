@@ -1,6 +1,6 @@
 Minetest Mod 'plot_system'
 ==================
-Version 1.0
+Version 2.0
 
 License of source code:
 ---------------------------------
