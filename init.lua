@@ -212,90 +212,64 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 end)
 
 corner.tiles = {corner.tiles[1] .."^plot_system_setting.png", corner.tiles[1]}
+corner.diggable = false
+corner.on_blast = function() end
 minetest.register_node("plot_system:corner", corner)
 
-minetest.register_node("plot_system:invisible", {
+minetest.register_node("plot_system:invisible", { --Top Border
     description = "Invisible",
     drawtype = "airlike",
+		paramtype = "light",
     groups = {not_in_creative_inventory = 1},
     pointable = false,
+		diggable = false,
     sunlight_propagates = true,
     on_blast = function() end})
 
-local invisible2 = copy_node("plot_system:invisible")
+local invisible2 = copy_node("plot_system:invisible") --Wall Border
 invisible2.walkable = false
 minetest.register_node("plot_system:invisible2", invisible2)
 
-local plotblock2 = copy_node("plot_system:invisible")
+local plotblock2 = copy_node("plot_system:invisible") --Bottom Border
 plotblock2.drawtype = nil
 plotblock2.tiles = {minetest.registered_nodes[plotblock].tiles[1]}
 minetest.register_node("plot_system:invisible3", plotblock2)
 
 minetest.register_on_joinplayer(function(player)
-    if not player:get_attribute("plot_system_ownercount") then
+		if not player:get_attribute("plot_system_ownercount") then
       player:set_attribute("plot_system_ownercount", 0)
     end
 end)
 
-local old_node_dig = minetest.node_dig
-function minetest.node_dig(pos, node, digger)
-    if not digger or minetest.get_player_privs(digger:get_player_name()).privs then
-      return old_node_dig(pos, node, digger)
-    end
-    local name = digger:get_player_name()
-    if pos.y < plotposy - plotheight or pos.y > plotposy + plotairheight then
-      return old_node_dig(pos, node, digger)
-    end
-    local cornerposes = minetest.find_nodes_in_area({x = pos.x - math.sqrt((plotwidth / 2) * (plotwidth / 2)), y = plotposy - plotheight, z = pos.z - math.sqrt((plotwidth / 2) * (plotwidth / 2))}, {x = pos.x + math.sqrt((plotwidth / 2) * (plotwidth / 2)), y = plotposy + plotairheight, z = pos.z + math.sqrt((plotwidth / 2) * (plotwidth / 2))}, "plot_system:corner")
-    local cornerpos = cornerposes[1]
-    for key, value in ipairs(cornerposes) do
-      if vector.distance(pos, value) < vector.distance(pos, cornerpos) then
-        cornerpos = value
-      end
-    end
-    local poses = get_cornerpos(cornerpos)
-    if pos.x > math.min(poses[4].x, math.min(poses[3].x, math.min(poses[2].x, poses[1].x))) and pos.x < math.max(poses[4].x, math.max(poses[3].x, math.max(poses[2].x, poses[1].x))) and pos.z > math.min(poses[4].z, math.min(poses[3].z, math.min(poses[2].z, poses[1].z))) and pos.z < math.max(poses[4].z, math.max(poses[3].z, math.max(poses[2].z, poses[1].z))) then
-      local meta = minetest.get_meta(cornerpos)
-      if meta:get_string("owner") == name then
-        return old_node_dig(pos, node, digger)
-      end
-      for key, value in pairs(meta:get_string("members"):split(",")) do
-        if value == name then
-          return old_node_dig(pos, node, digger)
-        end
-      end
-    end
-end
-
-local old_node_place = minetest.item_place
-function minetest.item_place(itemstack, placer, pointed_thing, param2)
-    local pos = pointed_thing.under
-    if not placer or minetest.get_node(pos).name == "plot_system:corner" or minetest.get_player_privs(placer:get_player_name()).privs then
-      return old_node_place(itemstack, placer, pointed_thing, param2)
-    end
-    local name = placer:get_player_name()
-    if pos.y < plotposy - plotheight or pos.y > plotposy + plotairheight then
-      return old_node_place(itemstack, placer, pointed_thing, param2)
-    end
-    local cornerposes = minetest.find_nodes_in_area({x = pos.x - math.sqrt((plotwidth / 2) * (plotwidth / 2)), y = plotposy - plotheight, z = pos.z - math.sqrt((plotwidth / 2) * (plotwidth / 2))}, {x = pos.x + math.sqrt((plotwidth / 2) * (plotwidth / 2)), y = plotposy + plotairheight, z = pos.z + math.sqrt((plotwidth / 2) * (plotwidth / 2))}, "plot_system:corner")
-    local cornerpos = cornerposes[1]
-    for key, value in ipairs(cornerposes) do
-      if vector.distance(pos, value) < vector.distance(pos, cornerpos) then
-        cornerpos = value
-      end
-    end
-    local poses = get_cornerpos(cornerpos)
-    if pos.x >= math.min(poses[4].x, math.min(poses[3].x, math.min(poses[2].x, poses[1].x))) and pos.x <= math.max(poses[4].x, math.max(poses[3].x, math.max(poses[2].x, poses[1].x))) and pos.z >= math.min(poses[4].z, math.min(poses[3].z, math.min(poses[2].z, poses[1].z))) and pos.z <= math.max(poses[4].z, math.max(poses[3].z, math.max(poses[2].z, poses[1].z))) then
-      local meta = minetest.get_meta(cornerpos)
-      if meta:get_string("owner") == name then
-        return old_node_place(itemstack, placer, pointed_thing, param2)
-      end
-      for key, value in pairs(meta:get_string("members"):split(",")) do
-        if value == name then
-          return old_node_place(itemstack, placer, pointed_thing, param2)
-        end
-      end
-    end
+local old_is_protected = minetest.is_protected
+function minetest.is_protected(pos, name)
+	local player = minetest.get_player_by_name(name)
+	if not player or minetest.get_player_privs(name).privs then
+		return old_is_protected(pos, name)
+	end
+	if pos.y < plotposy - plotheight or pos.y > plotposy + plotairheight then
+		return old_is_protected(pos, name)
+	end
+	local cornerposes = minetest.find_nodes_in_area({x = pos.x - math.sqrt((plotwidth / 2) * (plotwidth / 2)), y = plotposy - plotheight, z = pos.z - math.sqrt((plotwidth / 2) * (plotwidth / 2))}, {x = pos.x + math.sqrt((plotwidth / 2) * (plotwidth / 2)), y = plotposy + plotairheight, z = pos.z + math.sqrt((plotwidth / 2) * (plotwidth / 2))}, "plot_system:corner")
+	local cornerpos = cornerposes[1]
+	for key, value in ipairs(cornerposes) do
+		if vector.distance(pos, value) < vector.distance(pos, cornerpos) then
+			cornerpos = value
+		end
+	end
+	local poses = get_cornerpos(cornerpos)
+	if pos.x > math.min(poses[4].x, math.min(poses[3].x, math.min(poses[2].x, poses[1].x))) and pos.x < math.max(poses[4].x, math.max(poses[3].x, math.max(poses[2].x, poses[1].x))) and pos.z > math.min(poses[4].z, math.min(poses[3].z, math.min(poses[2].z, poses[1].z))) and pos.z < math.max(poses[4].z, math.max(poses[3].z, math.max(poses[2].z, poses[1].z))) then
+		local meta = minetest.get_meta(cornerpos)
+		if meta:get_string("owner") == name then
+			return old_is_protected(pos, name)
+		end
+		for key, value in pairs(meta:get_string("members"):split(",")) do
+			if value == name then
+				return old_is_protected(pos, name)
+			end
+		end
+	end
+	return true
 end
 
 local function inserts(min, max, y, y2)
@@ -411,7 +385,7 @@ minetest.register_on_generated(function(minp, maxp, seed)
           end
         elseif getblockpos({x = x, y = plotposy, z = z}) == 4 then
           if inserts(plotposy - plotheight, plotposy, minp.y, maxp.y) then
-            for pos in va:iter(x, plotposy - plotheight, z, x, plotposy, z--[[x, math.max(minp.y, plotposy - plotheight), z, x, plotposy, z]]) do
+            for pos in va:iter(x, plotposy - plotheight, z, x, plotposy, z) do
               data[pos] = plotblockid
             end
           end
