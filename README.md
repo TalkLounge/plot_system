@@ -1,3 +1,5 @@
+![](https://i.imgur.com/5lq4C5E.jpg)
+
 # Plot System
 [Minetest](https://www.minetest.net/ "Link to minetest.net") mod adding a minecraft like plot system
 
