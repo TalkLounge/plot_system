@@ -415,3 +415,25 @@ minetest.register_on_generated(function(minp, maxp, seed)
     vm:update_liquids()
     vm:write_to_map()
   end)
+
+minetest.register_lbm({
+	name = "plot_system:replace_snowblock",
+	nodenames = {"default:snowblock"},
+	run_at_every_load = true,
+	action = function(pos, node)
+		if pos.y == plotposy then
+			minetest.set_node(pos, {name = "default:dirt_with_grass"})
+		end
+end})
+
+minetest.register_lbm({
+	name = "plot_system:replace_dirtsnow",
+	nodenames = {"default:dirt_with_snow"},
+	run_at_every_load = true,
+	action = function(pos, node)
+		if pos.y == plotposy then
+			minetest.set_node(pos, {name = "default:dirt_with_grass"})
+		elseif pos.y == plotposy - 1 then
+			minetest.set_node(pos, {name = "default:dirt"})
+		end
+end})
