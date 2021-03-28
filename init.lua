@@ -211,7 +211,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
     end
 end)
 
-corner.tiles = {corner.tiles[1] .."^plot_system_setting.png", corner.tiles[1]}
+corner.tiles = {corner.tiles[1].name .."^plot_system_setting.png", corner.tiles[1].name}
 corner.diggable = false
 corner.on_blast = function() end
 minetest.register_node("plot_system:corner", corner)
