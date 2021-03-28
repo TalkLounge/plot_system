@@ -8,7 +8,7 @@
 * stairs
 
 ## Version
-2.0
+3.0
 
 ## License
 CC BY-NC 3.0 | See [LICENSE](https://github.com/TalkLounge/plot_system/blob/master/LICENSE.md "Link to LICENSE.md")
